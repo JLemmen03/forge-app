@@ -1,0 +1,526 @@
+# FORGE V4 — Your Training, Your Rules
+
+Mobile-first progressive web app. This update expands the previous FORGE project into an independent workout builder.
+
+## Included
+- Start an empty workout and add exercises during a session
+- Exercise library: searchable, filterable, 100+ movements including stretching and cardio
+- Exercise technique pages and user-configurable HTTPS video links (YouTube or MP4)
+- Create, edit and launch reusable routines
+- Personal measurable goals with progress check-ins
+- Existing Phase 6 and Phase 7 programs, tracking, weight log, backup and restore retained
+- All new data saved locally on the device in the existing `forge_mvp_v1` key
+
+## Important limitations
+- Videos are **not bundled**. Add verified exercise demonstration URLs per exercise; third-party video availability depends on provider and internet access.
+- Exercise instructions for movements without a curated technique entry are generic, not exercise-specific coaching.
+- Data does not sync between devices or users. Export backups frequently.
+- This is an iterative PWA, not a fully tested production fitness platform.
+
+## Deploy
+Replace the six root files in your GitHub repository, commit to `main`, then let Vercel redeploy. Export your FORGE backup before updating.
+
+
+:root{
+  --bg:#081018;--panel:#111b25;--panel2:#182636;--text:#f6f8fb;--muted:#91a0af;
+  --green:#45d990;--blue:#4b8ff7;--amber:#f8ae42;--red:#e96b6b;--line:#243447;
+  --radius:18px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#071018,#0b131c 60%,#0c151e);color:var(--text);
+font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+#app{min-height:100vh;padding-bottom:84px}
+.shell{max-width:760px;margin:0 auto;padding:18px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0 18px}
+.brand{font-size:18px;font-weight:900;letter-spacing:.12em;color:var(--green)}
+h1{font-size:29px;line-height:1.06;margin:4px 0 6px}
+h2{font-size:20px;margin:0 0 12px}
+h3{font-size:15px;margin:0}
+.sub{color:var(--muted);font-size:13px;line-height:1.45}
+.grid{display:grid;gap:12px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{background:rgba(17,27,37,.96);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.card.soft{background:var(--panel2)}
+.card.green{border-color:#245d46;background:#0e231c}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.stack{display:flex;flex-direction:column;gap:10px}
+.btn{border:0;border-radius:14px;padding:13px 16px;background:var(--green);color:#04130c;font-weight:800}
+.btn.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.btn.small{padding:8px 10px;border-radius:10px;font-size:12px}
+.pill{display:inline-flex;padding:7px 10px;border-radius:999px;background:var(--panel2);font-size:11px;color:var(--muted);border:1px solid var(--line)}
+.pill.active{color:var(--green);border-color:#286548;background:#0f271d}
+.metric{font-size:27px;font-weight:900}
+.metric.small{font-size:20px}
+.section{margin-top:18px}
+.nav{position:fixed;bottom:0;left:0;right:0;background:rgba(6,13,19,.96);border-top:1px solid var(--line);
+display:flex;justify-content:center;z-index:30;backdrop-filter:blur(12px);padding-bottom:env(safe-area-inset-bottom)}
+.navinner{width:min(760px,100%);display:grid;grid-template-columns:repeat(5,1fr)}
+.nav button{background:none;border:0;color:var(--muted);padding:12px 4px 10px;font-size:10px}
+.nav button.active{color:var(--green);font-weight:800}
+.exercise{display:grid;grid-template-columns:1fr auto;gap:10px;padding:14px 0;border-bottom:1px solid var(--line)}
+.exercise:last-child{border-bottom:0}
+.exercise-title{font-weight:800}
+.exercise-meta{font-size:12px;color:var(--muted);margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--muted);font-weight:700}
+input,select,textarea{width:100%;background:#0b151f;border:1px solid var(--line);border-radius:12px;color:var(--text);padding:11px}
+label{display:block;color:var(--muted);font-size:12px;margin:8px 0 5px}
+.setrow{display:grid;grid-template-columns:38px 1fr 1fr 1fr 42px;gap:7px;align-items:center;margin:7px 0}
+.setnum{color:var(--muted);text-align:center}
+.check{width:32px;height:32px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);color:var(--green)}
+.check.done{background:#103022}
+.progressbar{height:8px;background:#0b151f;border-radius:999px;overflow:hidden}
+.progressbar > i{display:block;height:100%;background:var(--green);border-radius:999px}
+.video{height:190px;border-radius:16px;background:linear-gradient(145deg,#182535,#0d151f);border:1px solid var(--line);
+display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:800}
+.steps{counter-reset:step;display:grid;gap:10px}
+.step{padding-left:36px;position:relative;color:#d9e0e7;font-size:13px;line-height:1.45}
+.step:before{counter-increment:step;content:counter(step);position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50%;
+background:#173d2d;color:var(--green);display:grid;place-items:center;font-weight:900;font-size:11px}
+.musclegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.muscle{padding:12px;background:var(--panel2);border-radius:14px;border:1px solid var(--line)}
+.muscle strong{display:block}
+.muscle span{color:var(--muted);font-size:11px}
+.warn{color:var(--amber)}
+.good{color:var(--green)}
+.hidden{display:none!important}
+.hero{padding:20px;background:linear-gradient(135deg,#0f2a20,#111b25 55%);border:1px solid #285c46;border-radius:22px}
+hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+@media(max-width:520px){.shell{padding:14px}.grid.two{grid-template-columns:1fr}.setrow{grid-template-columns:30px 1fr 1fr 1fr 38px}h1{font-size:27px}}
+
+/* FORGE V4 */
+.full{width:100%}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.version{font-size:9px;color:var(--muted);letter-spacing:0}.mediaframe{display:block;width:100%;height:240px;border:1px solid var(--line);border-radius:16px;background:#000}.linkbtn{border:0;background:none;color:var(--green);padding:10px 0;font-size:13px;text-align:left}.card h3{overflow-wrap:anywhere}.card .row{flex-wrap:wrap}.card input{min-width:0}@media(max-width:520px){.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.mediaframe{height:210px}.nav button{font-size:10px}}
+
+const CACHE='forge-v4-20261015';
+const ASSETS=['./','./index.html','./styles.css','./app.js','./manifest.json'];
+self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)))});
+self.addEventListener('activate',e=>e.waitUntil(Promise.all([self.clients.claim(),caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))])));
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.origin!==self.location.origin)return;e.respondWith(fetch(e.request).then(r=>{if(r.ok){const clone=r.clone();caches.open(CACHE).then(c=>c.put(e.request,clone))}return r}).catch(()=>caches.match(e.request)))});
+
+
+const $ = (s, el=document)=>el.querySelector(s);
+const $$ = (s, el=document)=>[...el.querySelectorAll(s)];
+const DBKEY='forge_mvp_v1';
+
+const phase6 = {
+  id:'phase6', name:'Phase 6 — Strength × Sculpted V-Taper', length:6, week:1,
+  structure:['Upper A','Lower A','Push','Pull','Lower B'],
+  workouts:[
+    {name:'Upper A', est:'~66 min', muscles:['Upper chest','Lats','Upper back','Biceps','Triceps'], exercises:[
+      ex('Low-Incline Smith Press',4,'5-8',150,['Upper chest','Front delts','Triceps']),
+      ex('Neutral-Grip Pull-Up / Assisted Pull-Up',4,'6-10',120,['Lats','Upper back','Biceps']),
+      ex('Converging Chest Press',3,'8-12',90,['Chest','Triceps']),
+      ex('Chest-Supported T-Bar Row',3,'8-12',90,['Upper back','Lats','Biceps']),
+      ex('Bayesian Cable Curl',3,'10-15',0,['Biceps'],'Superset'),
+      ex('Cross-Body Cable Triceps Extension',3,'10-15',60,['Triceps'],'Superset')
+    ]},
+    {name:'Lower A', est:'~62–66 min', muscles:['Quads','Glutes','Calves','Abs'], exercises:[
+      ex('Hack Squat',4,'5-8',150,['Quads','Glutes']),
+      ex('Bulgarian Split Squat',3,'8-10 / leg',90,['Quads','Glutes']),
+      ex('Leg Extension',3,'10-15',60,['Quads']),
+      ex('Seated Calf Raise',4,'8-12',75,['Calves']),
+      ex('Reverse Crunch',3,'12-20',45,['Abs']),
+      ex('Machine Crunch',3,'10-15',60,['Abs'])
+    ]},
+    {name:'Push', est:'~65–69 min', muscles:['Shoulders','Upper chest','Triceps'], exercises:[
+      ex('Plate-Loaded Shoulder Press',4,'5-8',150,['Front delts','Side delts','Triceps']),
+      ex('Incline Dumbbell Press',3,'6-10',120,['Upper chest','Front delts','Triceps']),
+      ex('Machine Lateral Raise',4,'10-15',60,['Side delts']),
+      ex('Low-to-High Cable Fly',3,'12-15',60,['Upper chest']),
+      ex('Overhead Cable Triceps Extension',3,'8-12',75,['Triceps']),
+      ex('Seated Dip Machine',3,'8-12',75,['Triceps','Chest','Front delts'])
+    ]},
+    {name:'Pull', est:'~67–70 min', muscles:['Lats','Upper back','Rear delts','Biceps','Abs'], exercises:[
+      ex('Chest-Supported Machine Row — Upper-Back Bias',4,'6-10',120,['Upper back','Rear delts','Biceps']),
+      ex('Single-Arm Kneeling Lat Pulldown',3,'8-12 / side',75,['Lats','Biceps']),
+      ex('Wide-Grip Cable Row',3,'10-12',90,['Upper back','Rear delts','Biceps']),
+      ex('Reverse Pec Deck',3,'12-20',60,['Rear delts','Upper back']),
+      ex('Incline Dumbbell Curl',3,'8-12',75,['Biceps']),
+      ex('Rope Hammer Curl',3,'10-15',60,['Biceps','Forearms']),
+      ex('Ab Wheel',3,'8-15',60,['Abs'])
+    ]},
+    {name:'Lower B', est:'~64–68 min', muscles:['Hamstrings','Glutes','Side delts','Biceps','Triceps','Abs'], exercises:[
+      ex('Romanian Deadlift',4,'5-8',150,['Hamstrings','Glutes','Lower back']),
+      ex('Seated Leg Curl',3,'8-12',75,['Hamstrings']),
+      ex('45° Back Extension — Glute Bias',3,'10-15',75,['Glutes','Hamstrings']),
+      ex('Single-Arm Cable Lateral Raise',4,'12-20',60,['Side delts']),
+      ex('Machine Preacher Curl',3,'8-12',0,['Biceps'],'Superset'),
+      ex('Single-Arm Reverse-Grip Pushdown',3,'10-15',60,['Triceps'],'Superset'),
+      ex('Decline Crunch',3,'12-20',45,['Abs'])
+    ]}
+  ]
+};
+function ex(name,sets,reps,rest,muscles,note=''){return {name,sets,reps,rest,muscles,note}}
+
+
+const phase7 = {
+ id:'phase7', name:'Phase 7 — V-Taper Evolution', length:6, week:1,
+ structure:['Upper A','Lower A','Push','Pull','Lower B'],
+ workouts:[
+ {name:'Upper A',est:'~60–70 min',muscles:['Chest','Lats','Upper back','Biceps','Triceps'],exercises:[
+ ex('Flat Dumbbell Bench Press',3,'6-8',150,['Chest','Triceps']),
+ ex('Neutral-Grip Lat Pulldown',3,'8-10',120,['Lats','Biceps']),
+ ex('High-Incline Smith Press',3,'8-10',120,['Upper chest','Front delts','Triceps']),
+ ex('Chest-Supported Dumbbell Row',3,'8-12',90,['Upper back','Lats','Biceps']),
+ ex('EZ-Bar Preacher Curl',3,'8-12',0,['Biceps'],'Superset with pushdown'),
+ ex('Rope Triceps Pushdown',3,'10-12',75,['Triceps'],'Superset with curl')]},
+ {name:'Lower A',est:'~60–70 min',muscles:['Quads','Glutes','Calves','Abs'],exercises:[
+ ex('Pendulum Squat / Heel-Elevated Smith Squat',3,'6-10',150,['Quads','Glutes']),
+ ex('Leg Press — Quad Bias',3,'10-12',120,['Quads','Glutes']),
+ ex('Reverse Dumbbell Lunge',2,'10 / leg',90,['Quads','Glutes']),
+ ex('Single-Leg Leg Extension',2,'12-15 / leg',60,['Quads']),
+ ex('Seated Calf Raise',3,'10-15',60,['Calves']),
+ ex('Decline Reverse Crunch',3,'12-20',60,['Abs'])]},
+ {name:'Push',est:'~60–70 min',muscles:['Shoulders','Upper chest','Triceps','Abs'],exercises:[
+ ex('Seated Dumbbell Shoulder Press',3,'6-10',120,['Front delts','Side delts','Triceps']),
+ ex('Incline Chest Press Machine',3,'8-12',120,['Upper chest','Triceps']),
+ ex('Lean-Away Cable Lateral Raise',4,'12-15',60,['Side delts']),
+ ex('Pec Deck Fly',2,'12-15',75,['Chest']),
+ ex('Cable Y-Raise',2,'12-20',60,['Lower traps','Shoulders']),
+ ex('Single-Arm Overhead Triceps Extension',3,'10-15',75,['Triceps']),
+ ex('Kneeling Cable Crunch',3,'10-15',60,['Abs'])]},
+ {name:'Pull',est:'~60–70 min',muscles:['Lats','Upper back','Rear delts','Biceps','Abs'],exercises:[
+ ex('Wide-Grip Assisted / Weighted Pull-Up',3,'6-10',150,['Lats','Biceps']),
+ ex('Chest-Supported High Row Machine',3,'8-12',120,['Upper back','Rear delts','Biceps']),
+ ex('Kneeling Single-Arm Cable Lat Pullover',3,'10-15',75,['Lats']),
+ ex('Cable Rear-Delt Fly',3,'12-20',60,['Rear delts']),
+ ex('Spider Curl',3,'10-12',75,['Biceps']),
+ ex('Reverse EZ-Bar Curl',2,'12-15',60,['Biceps','Forearms']),
+ ex('Hanging Knee Raise',3,'10-15',60,['Abs'])]},
+ {name:'Lower B',est:'~55–70 min',muscles:['Hamstrings','Glutes','Calves','Biceps','Triceps','Core'],exercises:[
+ ex('Smith Machine Romanian Deadlift',3,'6-10',150,['Hamstrings','Glutes']),
+ ex('Lying Leg Curl',3,'10-15',90,['Hamstrings']),
+ ex('Smith Machine Glute Bridge',2,'8-12',120,['Glutes']),
+ ex('Standing Calf Raise',3,'12-15',60,['Calves']),
+ ex('Incline Cable Curl',3,'10-15',0,['Biceps'],'Superset with extension'),
+ ex('Dual-Rope Triceps Extension',2,'10-15',75,['Triceps'],'Superset with curl'),
+ ex('Pallof Press',2,'12-15 / side',60,['Core'],'Each set includes both sides')]}
+ ]
+};
+
+const technique = {
+'Low-Incline Smith Press':[
+ 'Set the bench to a low incline, around 15–30°.',
+ 'Position the bench so the bar tracks toward your upper/mid chest.',
+ 'Plant your feet and keep your shoulder blades gently retracted and depressed.',
+ 'Unrack with straight wrists and lower the bar under control.',
+ 'Touch or approach the upper/mid chest without bouncing.',
+ 'Press upward while keeping the shoulders stable and avoiding an excessive arch.'
+],
+'Hack Squat':[
+ 'Place shoulders under the pads and feet about shoulder-width on the platform.',
+ 'Brace your trunk and unlock the machine.',
+ 'Descend under control while allowing your knees to travel naturally forward.',
+ 'Go as deep as you can while keeping your hips and back controlled against the pad.',
+ 'Drive through the whole foot to stand, stopping short of aggressively locking the knees.'
+],
+'Machine Lateral Raise':[
+ 'Adjust the seat so the machine pivot is close to shoulder height.',
+ 'Keep your chest tall and shoulders relaxed rather than shrugged.',
+ 'Raise your upper arms out to the sides in a smooth arc.',
+ 'Stop around shoulder height or where your delts stay loaded comfortably.',
+ 'Lower slowly and avoid dropping the weight stack.'
+],
+'Reverse Pec Deck':[
+ 'Set the seat so the handles are roughly shoulder height.',
+ 'Keep your chest against the pad and ribs controlled.',
+ 'Lead with the elbows and sweep the arms outward/back.',
+ 'Pause briefly when the rear delts are shortened.',
+ 'Return under control without letting the weight pull you forward.'
+],
+'Romanian Deadlift':[
+ 'Stand tall with the load close to your thighs and brace your trunk.',
+ 'Unlock the knees slightly, then push the hips backward.',
+ 'Keep the load close to your legs and your spine controlled.',
+ 'Descend until you feel a strong hamstring stretch without losing position.',
+ 'Drive the hips forward to stand; do not overextend your lower back.'
+],
+'Kneeling Hip-Flexor Stretch':[
+ 'Start in a half-kneeling position with one knee down.',
+ 'Gently tuck your pelvis instead of arching your lower back.',
+ 'Keep ribs stacked over the pelvis.',
+ 'Shift forward slightly until you feel the front of the hip/thigh stretch.',
+ 'Breathe slowly and hold a mild-to-moderate stretch without pain.'
+]
+};
+
+const stretches = [
+ {name:'5-Min Morning Mobility',goal:'Morning mobility',items:[
+  ['Cat-Cow',40],["World's Greatest Stretch",50],['Standing Side Reach',40],['Deep Squat Mobility',50],
+  ['Arm Circles + Shoulder Rotations',40],['Hamstring Sweeps',40],['Dead Hang',40]
+ ]},
+ {name:'10-Min Night Stretch',goal:'Night relaxation',items:[
+  ['Kneeling Hip-Flexor Stretch',60],['Quad Stretch',60],['Hamstring Stretch',60],['Figure-4 Glute Stretch',60],
+  ['Calf Stretch',60],["Child's Pose + Lat Reach",60],['Doorway Chest Stretch',60],['Cross-Body Rear-Delt Stretch',60],
+  ['Lying Spinal Twist',60],['Dead Hang — 2 × 20–30 sec',60]
+ ]}
+];
+const homeWorkouts=[
+ {name:'15-Min Full Body',equipment:'None',ex:['Bodyweight Squat','Reverse Lunge','Incline Push-Up','Glute Bridge','Dead Bug']},
+ {name:'Upper Body Bands',equipment:'Bands',ex:['Band Row','Band Chest Press','Band Lateral Raise','Band Curl','Band Pushdown']},
+ {name:'Travel Workout',equipment:'None',ex:['Split Squat','Push-Up','Single-Leg Glute Bridge','Pike Push-Up','Reverse Crunch']}
+];
+
+function seed(){
+ const old=localStorage.getItem(DBKEY);
+ if(old) { const saved=JSON.parse(old); if(!saved.programs.some(p=>p.id==='phase7')) saved.programs.push(phase7); return saved; }
+ const state={onboarded:false,route:'today',profile:{goal:'Lean V-Taper',priorities:['Shoulders','Lats','Upper chest'],days:5,limit:70,block:6,variety:'Balanced',strength:'High priority'},
+ programs:[phase6,phase7],activeProgram:'phase7',history:[],weights:[],custom:[],mobilityGoals:['Morning mobility','Night relaxation'],currentWorkout:null};
+ save(state);return state;
+}
+let state=seed();
+function save(s=state){localStorage.setItem(DBKEY,JSON.stringify(s))}
+function activeProgram(){return state.programs.find(p=>p.id===state.activeProgram)||state.programs[0]}
+function todayWorkout(){let p=activeProgram(); let idx=state.history.filter(h=>h.programId===p.id).length%p.workouts.length; return p.workouts[idx]}
+function nav(route){state.route=route;save();render()}
+window.nav=nav;
+
+function layout(content,active='today'){
+ return `<div class="shell"><div class="topbar"><div class="brand">FORGE</div><button class="btn ghost small" onclick="nav('settings')">Goals</button></div>${content}</div>
+ <div class="nav"><div class="navinner">${[['today','Today'],['train','Train'],['programs','Programs'],['progress','Progress'],['settings','You']].map(([r,n])=>`<button class="${active===r?'active':''}" onclick="nav('${r}')">${n}</button>`).join('')}</div></div>`
+}
+function onboarding(){
+ return `<div class="shell"><div class="brand" style="margin-top:22px">FORGE</div>
+ <div class="hero" style="margin-top:52px"><h1>Build the body.<br>Build the performance.</h1><p class="sub">Adaptive gym, mobility and home training in one coach.</p></div>
+ <div class="section card"><h2>What do you want to build?</h2>
+ <label>Primary physique goal</label><select id="goal"><option>Lean V-Taper</option><option>Strength + Muscle</option><option>Athletic</option><option>Balanced Physique</option><option>Fat Loss + Definition</option></select>
+ <label>Priority muscles (comma separated)</label><input id="prio" value="Shoulders, Lats, Upper chest">
+ <div class="grid two"><div><label>Training days</label><select id="days"><option>3</option><option>4</option><option selected>5</option><option>6</option></select></div>
+ <div><label>Session limit</label><select id="limit"><option>45</option><option>60</option><option selected>70</option><option>90</option></select></div></div>
+ <div class="grid two"><div><label>Program refresh</label><select id="block">${[3,4,5,6,7,8].map(x=>`<option ${x===6?'selected':''}>${x}</option>`).join('')}</select></div>
+ <div><label>Exercise variety</label><select id="variety"><option>Low</option><option selected>Balanced</option><option>High</option></select></div></div>
+ <button class="btn" style="width:100%;margin-top:16px" onclick="finishOnboarding()">Start using FORGE</button></div></div>`
+}
+window.finishOnboarding=()=>{
+ state.profile.goal=$('#goal').value;
+ state.profile.priorities=$('#prio').value.split(',').map(x=>x.trim()).filter(Boolean);
+ state.profile.days=+$('#days').value;state.profile.limit=+$('#limit').value;state.profile.block=+$('#block').value;state.profile.variety=$('#variety').value;
+ state.onboarded=true;state.route='today';save();render()
+}
+function today(){
+ const w=todayWorkout(),p=activeProgram();
+ let latest=state.history[0];
+ return layout(`<div><div class="sub">${p.name} • Week ${p.week}/${p.length}</div><h1>${greeting()}</h1></div>
+ <div class="hero"><div class="row"><div><div class="sub">TODAY'S WORKOUT</div><h2 style="margin-top:5px">${w.name}</h2><div class="sub">${w.exercises.length} exercises • ${w.est}</div></div><span class="pill active">Strength + V-Taper</span></div>
+ <button class="btn" style="width:100%;margin-top:16px" onclick="startWorkout('${w.name}')">Start workout</button></div>
+ <div class="section"><h2>Today</h2><div class="grid">
+ ${stretches.map(s=>`<div class="card row"><div><h3>${s.name}</h3><div class="sub">${s.goal} • ${s.items.length} movements</div></div><button class="btn secondary small" onclick="openStretch('${s.name}')">Open</button></div>`).join('')}
+ </div></div>
+ <div class="section"><h2>Coach insight</h2><div class="card green">
+ <h3 class="good">${progressionInsight()}</h3><p class="sub">The goal is bodyweight trend down while benchmark lift performance trends up.</p></div></div>
+ ${latest?`<div class="section"><h2>Last session</h2><div class="card"><b>${latest.workout}</b><div class="sub">${new Date(latest.date).toLocaleDateString()} • ${latest.completedSets} completed sets</div></div></div>`:''}`, 'today')
+}
+function greeting(){let h=new Date().getHours();return h<12?'Good morning':h<18?'Good afternoon':'Good evening'}
+function progressionInsight(){
+ const hist=state.history;
+ if(!hist.length) return 'Log your first workout to start progression tracking.';
+ let recs=[];
+ hist.slice(0,4).forEach(h=>h.exercises?.forEach(e=>{let top=parseInt((e.targetReps||'0-0').split('-').pop()); if(top&&e.sets?.length&&e.sets.every(s=>s.done&&+s.reps>=top)) recs.push(e.name)}));
+ return recs.length?`${recs[0]} is ready for a small load increase next exposure.`:'Keep chasing rep PRs with clean form and target RIR.'
+}
+
+function startWorkout(name){
+ const p=activeProgram();const w=p.workouts.find(x=>x.name===name)||todayWorkout();
+ state.currentWorkout={programId:p.id,workout:w.name,start:Date.now(),exercises:w.exercises.map(e=>({...e,setData:Array.from({length:e.sets},(_,i)=>({weight:'',reps:'',rir:'2',done:false}))}))};
+ state.route='train';save();render()
+}
+window.startWorkout=startWorkout;
+function train(){
+ if(!state.currentWorkout) return layout(`<h1>Train</h1><p class="sub">Choose a session from your active program.</p>${activeProgram().workouts.map(w=>`<div class="card row" style="margin-bottom:10px"><div><h3>${w.name}</h3><div class="sub">${w.est} • ${w.exercises.length} exercises</div></div><button class="btn small" onclick="startWorkout('${w.name}')">Start</button></div>`).join('')}`,'train');
+ const c=state.currentWorkout;
+ return layout(`<div class="row"><div><div class="sub">ACTIVE WORKOUT</div><h1>${c.workout}</h1></div><button class="btn ghost small" onclick="cancelWorkout()">Cancel</button></div>
+ ${c.exercises.map((e,ei)=>exerciseLogger(e,ei)).join('')}
+ <button class="btn" style="width:100%;margin-top:18px" onclick="finishWorkout()">Finish workout</button>`,'train')
+}
+function exerciseLogger(e,ei){
+ let previous=findPrevious(e.name);
+ return `<div class="card section"><div class="row"><div><h3>${e.name}</h3><div class="exercise-meta">${e.sets} × ${e.reps} • ${e.rest?e.rest+' sec':'superset'}${e.note?' • '+e.note:''}</div></div><button class="btn secondary small" onclick="openExercise('${esc(e.name)}')">How to + video</button></div>
+ ${previous?`<div class="sub" style="margin-top:8px">Previous: ${previous.map(s=>`${s.weight||'—'}kg × ${s.reps||'—'}`).join(' • ')}</div>`:''}
+ <div style="margin-top:10px">${e.setData.map((s,si)=>`<div class="setrow"><div class="setnum">${si+1}</div><input inputmode="decimal" placeholder="kg" value="${s.weight}" onchange="setField(${ei},${si},'weight',this.value)"><input inputmode="numeric" placeholder="reps" value="${s.reps}" onchange="setField(${ei},${si},'reps',this.value)"><input inputmode="numeric" placeholder="RIR" value="${s.rir}" onchange="setField(${ei},${si},'rir',this.value)"><button class="check ${s.done?'done':''}" onclick="toggleSet(${ei},${si})">${s.done?'✓':'○'}</button></div>`).join('')}</div>
+ ${e.rest?`<button class="btn ghost small" onclick="startTimer(${e.rest})">Start ${e.rest}s rest</button> <span id="timer-${ei}" class="sub"></span>`:''}</div>`
+}
+window.setField=(ei,si,f,v)=>{state.currentWorkout.exercises[ei].setData[si][f]=v;save()}
+window.toggleSet=(ei,si)=>{state.currentWorkout.exercises[ei].setData[si].done=!state.currentWorkout.exercises[ei].setData[si].done;save();render()}
+window.cancelWorkout=()=>{if(confirm('Cancel this workout?')){state.currentWorkout=null;save();render()}}
+window.startTimer=(sec)=>{let end=Date.now()+sec*1000;let id=setInterval(()=>{let left=Math.max(0,Math.ceil((end-Date.now())/1000));document.title=left?`FORGE • ${left}s`:'FORGE'; if(!left){clearInterval(id);navigator.vibrate?.(180);render()}},1000)}
+function finishWorkout(){
+ const c=state.currentWorkout;
+ const history={id:'h'+Date.now(),programId:c.programId,workout:c.workout,date:new Date().toISOString(),completedSets:0,exercises:c.exercises.map(e=>{
+  let sets=e.setData.map(s=>({...s})); historyDummy=0; return {name:e.name,targetReps:e.reps,muscles:e.muscles,sets}
+ })};
+ history.completedSets=history.exercises.reduce((n,e)=>n+e.sets.filter(s=>s.done).length,0);
+ state.history.unshift(history); state.currentWorkout=null; save(); state.route='progress';render()
+}
+window.finishWorkout=finishWorkout;
+function findPrevious(name){
+ for(const h of state.history){let e=h.exercises?.find(x=>x.name===name);if(e)return e.sets.filter(s=>s.done)}
+ return null
+}
+function openExercise(name){state.exercise=name;state.route='exercise';save();render()}
+window.openExercise=openExercise;
+function exercisePage(){
+ let name=state.exercise||'Low-Incline Smith Press';
+ let e; activeProgram().workouts.forEach(w=>w.exercises.forEach(x=>{if(x.name===name)e=x}));
+ let steps=technique[name]||[
+  'Adjust the equipment so the movement fits your joints and range of motion.',
+  'Brace and establish a stable starting position.',
+  'Move through a controlled range without using unnecessary momentum.',
+  'Keep the target muscle loaded while maintaining comfortable joint alignment.',
+  'Stop the set when technique meaningfully deteriorates.'
+ ];
+ return layout(`<button class="btn ghost small" onclick="nav('train')">← Back</button><h1>${name}</h1><div class="sub">${e?.muscles?.join(' • ')||'Exercise technique'}</div>
+ <div class="video section">▶ VIDEO / GIF DEMONSTRATION<br><span class="sub" style="position:absolute;margin-top:46px">Media slot ready for licensed or self-recorded clips</span></div>
+ <div class="section"><h2>Step-by-step</h2><div class="steps">${steps.map(s=>`<div class="step">${s}</div>`).join('')}</div></div>
+ <div class="section grid two"><div class="card"><h3>Key cues</h3><p class="sub">Controlled eccentric • stable joints • full comfortable ROM • target muscle first.</p></div>
+ <div class="card"><h3>Common mistakes</h3><p class="sub">Too much load • momentum • shortening ROM • ignoring pain or unstable positioning.</p></div></div>
+ <div class="section card"><h3>Video source</h3><p class="sub">The MVP intentionally ships without copied third-party exercise videos. Add licensed clips, your own recordings, or approved URLs later.</p></div>`,'train')
+}
+function programs(){
+ return layout(`<h1>Programs</h1><p class="sub">Gym, mobility and home routines can all coexist.</p>
+ ${state.programs.map(p=>`<div class="card section"><div class="row"><div><h3>${p.name}</h3><div class="sub">Week ${p.week}/${p.length} • ${p.workouts.length} days</div></div><span class="pill ${p.id===state.activeProgram?'active':''}">${p.id===state.activeProgram?'Active':'Available'}</span></div>
+ <button class="btn ${p.id===state.activeProgram?'ghost':'secondary'} small" onclick="activateProgram('${p.id}')">${p.id===state.activeProgram?'Current program':'Activate program'}</button>
+ <div style="margin-top:10px">${p.workouts.map(w=>`<div class="exercise"><div><div class="exercise-title">${w.name}</div><div class="exercise-meta">${w.est} • ${w.exercises.length} exercises</div></div><button class="btn secondary small" onclick="startWorkout('${w.name}')">Start</button></div>`).join('')}</div></div>`).join('')}
+ <div class="section"><h2>Home workouts</h2>${homeWorkouts.map(h=>`<div class="card" style="margin-bottom:10px"><h3>${h.name}</h3><div class="sub">${h.equipment} • ${h.ex.join(' • ')}</div></div>`).join('')}</div>
+ <div class="section card"><h2>Create custom routine</h2><label>Name</label><input id="customName" placeholder="e.g. Hotel Full Body"><label>Type</label><select id="customType"><option>Gym</option><option>Stretching</option><option>Home</option><option>Core</option><option>Cardio</option></select><button class="btn" style="width:100%;margin-top:10px" onclick="addCustom()">Create</button></div>`,'programs')
+}
+window.activateProgram=id=>{if(state.currentWorkout){alert('Finish or cancel the current workout before switching programs.');return;}state.activeProgram=id;save();render()};
+window.addCustom=()=>{let n=$('#customName').value.trim(); if(!n)return; state.custom.push({name:n,type:$('#customType').value});save();alert('Created. Full routine editor is the next build step.')}
+function progress(){
+ let muscle={};
+ state.history.slice(0,5).forEach(h=>h.exercises?.forEach(e=>e.sets.filter(s=>s.done).forEach(()=>e.muscles?.forEach((m,i)=>{muscle[m]=(muscle[m]||0)+(i===0?1:.5)}))));
+ let top=Object.entries(muscle).sort((a,b)=>b[1]-a[1]).slice(0,12);
+ return layout(`<h1>Progress</h1><div class="grid two">
+ <div class="card"><div class="sub">Completed workouts</div><div class="metric">${state.history.length}</div></div>
+ <div class="card"><div class="sub">Current bodyweight</div><div class="metric">${state.weights[0]?.kg||'—'} <span style="font-size:12px">kg</span></div></div></div>
+ <div class="section card"><h2>Log bodyweight</h2><div class="row"><input id="weightInput" inputmode="decimal" placeholder="kg"><button class="btn" onclick="logWeight()">Save</button></div>
+ ${state.weights.length?`<div class="sub" style="margin-top:10px">Recent: ${state.weights.slice(0,7).map(w=>w.kg).join(' • ')} kg</div>`:''}</div>
+ <div class="section"><h2>Muscles trained — recent week</h2><div class="musclegrid">${top.length?top.map(([m,s])=>`<div class="muscle"><strong>${m}</strong><span>${s.toFixed(1)} weighted sets</span></div>`).join(''):'<div class="card sub">Complete workouts to build your muscle map.</div>'}</div></div>
+ <div class="section"><h2>Strength progression</h2>${strengthCards()}</div>`,'progress')
+}
+window.logWeight=()=>{let kg=parseFloat($('#weightInput').value);if(!kg)return;state.weights.unshift({kg,date:new Date().toISOString()});save();render()}
+function strengthCards(){
+ let names=['Low-Incline Smith Press','Hack Squat','Plate-Loaded Shoulder Press','Romanian Deadlift'];
+ return names.map(n=>{
+  let hist=[];state.history.slice().reverse().forEach(h=>{let e=h.exercises?.find(x=>x.name===n);if(e){let best=e.sets.filter(s=>s.done).sort((a,b)=>(+b.weight*+b.reps)-(+a.weight*+a.reps))[0];if(best)hist.push(best)}})
+  let trend=hist.length>1&&(+hist.at(-1).weight*+hist.at(-1).reps)>(+hist[0].weight*+hist[0].reps);
+  return `<div class="card" style="margin-bottom:10px"><div class="row"><div><h3>${n}</h3><div class="sub">${hist.length?`Latest: ${hist.at(-1).weight} kg × ${hist.at(-1).reps}`:'No data yet'}</div></div><span class="pill ${trend?'active':''}">${trend?'Progressing':'Track'}</span></div></div>`
+ }).join('')
+}
+function openStretch(name){state.stretch=name;state.route='stretch';save();render()}
+window.openStretch=openStretch;
+function stretchPage(){
+ let s=stretches.find(x=>x.name===state.stretch)||stretches[0];
+ return layout(`<button class="btn ghost small" onclick="nav('today')">← Back</button><h1>${s.name}</h1><p class="sub">${s.goal} • guided sequence</p>
+ ${s.items.map(([n,sec],i)=>`<div class="card section"><div class="row"><div><div class="sub">MOVEMENT ${i+1}</div><h3>${n}</h3><div class="sub">${sec} sec</div></div><button class="btn secondary small" onclick="${n==='Kneeling Hip-Flexor Stretch'?`openExercise('Kneeling Hip-Flexor Stretch')`:`alert('Video + detailed technique slot ready for ${n.replace(/'/g,"")}')`}">Video + how to</button></div></div>`).join('')}`,'train')
+}
+function settings(){
+ let p=state.profile;
+ return layout(`<h1>Your goals</h1><p class="sub">These settings drive future training and mobility recommendations.</p>
+ <div class="card"><label>Physique goal</label><select id="sg"><option ${p.goal==='Lean V-Taper'?'selected':''}>Lean V-Taper</option><option>Strength + Muscle</option><option>Athletic</option><option>Balanced Physique</option></select>
+ <label>Priority muscles</label><input id="sp" value="${p.priorities.join(', ')}">
+ <div class="grid two"><div><label>Block length</label><select id="sb">${[3,4,5,6,7,8].map(x=>`<option ${x===p.block?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Variety</label><select id="sv"><option ${p.variety==='Low'?'selected':''}>Low</option><option ${p.variety==='Balanced'?'selected':''}>Balanced</option><option ${p.variety==='High'?'selected':''}>High</option></select></div></div>
+ <label>Workout limit (min)</label><input id="sl" type="number" value="${p.limit}">
+ <button class="btn" style="width:100%;margin-top:14px" onclick="saveSettings()">Save goals</button></div>
+ <div class="section card"><h2>Mobility goals</h2>${['Full-body flexibility','Morning mobility','Night relaxation','Hip mobility','Shoulder mobility','Hamstring flexibility','Athletic mobility'].map(g=>`<span class="pill ${state.mobilityGoals.includes(g)?'active':''}" style="margin:4px" onclick="toggleMobility('${g}')">${g}</span>`).join('')}</div>
+ <div class="section card"><h2>Back up your data</h2><p class="sub">Your workouts are stored on this device. Export regularly, especially before clearing Safari data.</p><button class="btn secondary" onclick="exportForgeData()">Export backup (JSON)</button><label>Restore backup</label><input type="file" id="restoreFile" accept=".json,application/json" onchange="restoreForgeData(this)"></div>
+ <div class="section card"><h2>App data</h2><button class="btn ghost" onclick="resetApp()">Reset demo data</button></div>`,'settings')
+}
+window.saveSettings=()=>{state.profile.goal=$('#sg').value;state.profile.priorities=$('#sp').value.split(',').map(x=>x.trim()).filter(Boolean);state.profile.block=+$('#sb').value;state.profile.variety=$('#sv').value;state.profile.limit=+$('#sl').value;activeProgram().length=state.profile.block;save();alert('Goals saved.');render()}
+window.toggleMobility=g=>{state.mobilityGoals=state.mobilityGoals.includes(g)?state.mobilityGoals.filter(x=>x!==g):[...state.mobilityGoals,g];save();render()}
+window.exportForgeData=()=>{const blob=new Blob([JSON.stringify({format:'forge-backup-v1',exportedAt:new Date().toISOString(),data:state},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='FORGE-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+window.restoreForgeData=async input=>{const file=input.files?.[0];if(!file)return;try{const payload=JSON.parse(await file.text());const data=payload.format==='forge-backup-v1'?payload.data:payload;if(!Array.isArray(data.programs)||!Array.isArray(data.history)||!data.profile)throw Error('Invalid FORGE backup');if(!confirm('Replace current FORGE data with this backup? Export your current data first.'))return;state=data;if(!state.programs.some(p=>p.id==='phase7'))state.programs.push(phase7);save();render()}catch(e){alert('Could not restore backup: '+e.message)}};
+window.resetApp=()=>{if(confirm('Reset all FORGE demo data?')){localStorage.removeItem(DBKEY);state=seed();render()}}
+function esc(s){return s.replace(/'/g,"\\'")}
+
+function render(){
+ let app=$('#app');
+ if(!state.onboarded){app.innerHTML=onboarding();return}
+ const routes={today,train,programs,progress,settings,exercise:exercisePage,stretch:stretchPage};
+ app.innerHTML=(routes[state.route]||today)();
+}
+/* V4 extensions injected below */
+
+// FORGE V4: independent exercise catalog, free-form sessions, routine builder and personal goals.
+const catalogExtras = [
+ ['Barbell Bench Press','Chest','Barbell'],['Incline Barbell Bench Press','Chest','Barbell'],['Decline Dumbbell Press','Chest','Dumbbell'],['Dumbbell Fly','Chest','Dumbbell'],['Cable Chest Fly','Chest','Cable'],['Push-Up','Chest','Bodyweight'],['Incline Push-Up','Chest','Bodyweight'],['Dip','Chest','Bodyweight'],
+ ['Barbell Overhead Press','Shoulders','Barbell'],['Arnold Press','Shoulders','Dumbbell'],['Dumbbell Lateral Raise','Shoulders','Dumbbell'],['Cable Lateral Raise','Shoulders','Cable'],['Face Pull','Shoulders','Cable'],['Band Pull-Apart','Shoulders','Band'],['Pike Push-Up','Shoulders','Bodyweight'],
+ ['Chin-Up','Back','Bodyweight'],['Pull-Up','Back','Bodyweight'],['Barbell Row','Back','Barbell'],['One-Arm Dumbbell Row','Back','Dumbbell'],['Seated Cable Row','Back','Cable'],['Straight-Arm Pulldown','Back','Cable'],['Lat Pulldown','Back','Cable'],['Inverted Row','Back','Bodyweight'],
+ ['Barbell Curl','Biceps','Barbell'],['Alternating Dumbbell Curl','Biceps','Dumbbell'],['Hammer Curl','Biceps','Dumbbell'],['Concentration Curl','Biceps','Dumbbell'],['Cable Curl','Biceps','Cable'],['Skull Crusher','Triceps','Barbell'],['Close-Grip Bench Press','Triceps','Barbell'],['Rope Pushdown','Triceps','Cable'],['Overhead Dumbbell Extension','Triceps','Dumbbell'],['Diamond Push-Up','Triceps','Bodyweight'],
+ ['Barbell Back Squat','Legs','Barbell'],['Front Squat','Legs','Barbell'],['Goblet Squat','Legs','Dumbbell'],['Walking Lunge','Legs','Dumbbell'],['Step-Up','Legs','Dumbbell'],['Leg Press','Legs','Machine'],['Leg Extension','Legs','Machine'],['Lying Leg Curl','Legs','Machine'],['Seated Leg Curl','Legs','Machine'],['Hip Thrust','Legs','Barbell'],['Glute Bridge','Legs','Bodyweight'],['Conventional Deadlift','Legs','Barbell'],['Romanian Deadlift','Legs','Barbell'],['Standing Calf Raise','Legs','Machine'],['Seated Calf Raise','Legs','Machine'],
+ ['Cable Crunch','Core','Cable'],['Kneeling Cable Crunch','Core','Cable'],['Plank','Core','Bodyweight'],['Side Plank','Core','Bodyweight'],['Dead Bug','Core','Bodyweight'],['Bird Dog','Core','Bodyweight'],['Pallof Press','Core','Cable'],['Hanging Knee Raise','Core','Bodyweight'],['Hanging Leg Raise','Core','Bodyweight'],['Ab Wheel Rollout','Core','Equipment'],['Bicycle Crunch','Core','Bodyweight'],
+ ['Cat-Cow','Mobility','Bodyweight'],['World’s Greatest Stretch','Mobility','Bodyweight'],['Kneeling Hip-Flexor Stretch','Mobility','Bodyweight'],['Hamstring Stretch','Mobility','Bodyweight'],['Quad Stretch','Mobility','Bodyweight'],['Figure-4 Glute Stretch','Mobility','Bodyweight'],['Calf Stretch','Mobility','Bodyweight'],['Child’s Pose','Mobility','Bodyweight'],['Doorway Chest Stretch','Mobility','Bodyweight'],['Thoracic Rotation','Mobility','Bodyweight'],['90/90 Hip Switch','Mobility','Bodyweight'],['Deep Squat Hold','Mobility','Bodyweight'],['Shoulder CARs','Mobility','Bodyweight'],['Ankle Dorsiflexion Rock','Mobility','Bodyweight'],
+ ['Brisk Walking','Cardio','None'],['Running','Cardio','None'],['Cycling','Cardio','Equipment'],['Rowing Ergometer','Cardio','Machine'],['Jump Rope','Cardio','Equipment'],['Stair Climber','Cardio','Machine']
+];
+function forgeInit(){state.routines??=[];state.goals??=[];state.customExercises??=[];state.media??={};state.catalogFilter??={q:'',muscle:'All',equipment:'All'};state.exerciseReturn??='library';save()}
+forgeInit();
+function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function jsarg(s){return JSON.stringify(String(s)).replace(/</g,'\\u003c').replace(/'/g,'\\u0027')}
+function catalog(){let m=new Map();const add=(name,muscle,equipment,source)=>{if(!m.has(name.toLowerCase()))m.set(name.toLowerCase(),{name,muscle,equipment,source})};catalogExtras.forEach(([n,m,e])=>add(n,m,e,'catalog'));state.programs.forEach(p=>p.workouts.forEach(w=>w.exercises.forEach(e=>add(e.name,e.muscles?.[0]||'Strength','Gym','program'))));stretches.forEach(r=>r.items.forEach(([n])=>add(n,'Mobility','Bodyweight','mobility')));homeWorkouts.forEach(w=>w.ex.forEach(n=>add(n,'Strength',w.equipment,'home')));state.customExercises.forEach(e=>add(e.name,e.muscle,e.equipment,'custom'));return [...m.values()].sort((a,b)=>a.name.localeCompare(b.name))}
+function getExercise(name){return catalog().find(e=>e.name===name)||{name,muscle:'Strength',equipment:'Gym'}}
+function instructions(e){if(technique[e.name])return technique[e.name];let n=e.name.toLowerCase();if(e.muscle==='Mobility'||/stretch|mobility|hold|rotation|car[s]?|switch/.test(n))return ['Move into the position gradually and keep breathing naturally.','Use a comfortable range of motion; do not force or bounce into discomfort.','Hold or move slowly for the prescribed duration, then switch sides if applicable.'];if(/squat|lunge|press|step-up/.test(n)&&e.muscle==='Legs')return ['Set your feet in a stable position and brace your torso.','Lower under control through a comfortable range of motion.','Drive through the foot while keeping knees tracking naturally.'];if(/row|pulldown|pull-up|chin-up/.test(n))return ['Start with shoulders controlled and torso stable.','Pull through the elbows without swinging your body.','Return slowly and allow a comfortable stretch.'];if(/curl/.test(n))return ['Keep upper arms steady and wrists neutral.','Curl through a comfortable range without swinging.','Lower slowly, controlling the weight.'];if(/press|push-up|dip/.test(n))return ['Set a stable body position and brace your trunk.','Lower with control while keeping joints comfortably aligned.','Press without bouncing or forcing an uncomfortable range.'];return ['Set up the equipment and choose a manageable resistance.','Brace and move through a controlled, comfortable range.','Keep technique consistent and stop if you feel sharp pain.']}
+function library(){let f=state.catalogFilter;let all=catalog();let muscles=['All',...new Set(all.map(x=>x.muscle))].sort();let eqs=['All',...new Set(all.map(x=>x.equipment))].sort();let matches=all.filter(x=>(f.muscle==='All'||x.muscle===f.muscle)&&(f.equipment==='All'||x.equipment===f.equipment)&&x.name.toLowerCase().includes(f.q.toLowerCase()));return layout(`<div class="row"><div><div class="sub">MOVEMENT DATABASE</div><h1>Explore exercises</h1></div><span class="pill active">${all.length} exercises</span></div><p class="sub">Search movements, learn technique and add exercises to any workout.</p><div class="card"><label>Search</label><input placeholder="Search exercises..." value="${safe(f.q)}" oninput="setCatalogFilter('q',this.value)"><div class="grid two"><div><label>Muscle / category</label><select onchange="setCatalogFilter('muscle',this.value)">${muscles.map(m=>`<option ${f.muscle===m?'selected':''}>${safe(m)}</option>`).join('')}</select></div><div><label>Equipment</label><select onchange="setCatalogFilter('equipment',this.value)">${eqs.map(e=>`<option ${f.equipment===e?'selected':''}>${safe(e)}</option>`).join('')}</select></div></div></div><div class="sub section">${matches.length} results</div><div class="stack">${matches.map(e=>`<div class="card row"><div style="min-width:0"><h3>${safe(e.name)}</h3><div class="sub">${safe(e.muscle)} • ${safe(e.equipment)}</div></div><div class="row" style="gap:6px"><button class="btn secondary small" onclick='viewCatalogExercise(${jsarg(e.name)})'>Details</button>${state.currentWorkout?`<button class="btn small" onclick='addToSession(${jsarg(e.name)})'>+ Add</button>`:''}</div></div>`).join('')||'<div class="card sub">No matches. Try a different filter.</div>'}</div><div class="card section"><h3>Create your own exercise</h3><label>Exercise name</label><input id="newExName" placeholder="Your exercise"><label>Muscle group</label><input id="newExMuscle" placeholder="e.g. Back"><label>Equipment</label><input id="newExEquipment" placeholder="e.g. Cable"><button class="btn section" onclick="createExercise()">Add exercise</button></div>`,'library')}
+window.setCatalogFilter=(key,value)=>{state.catalogFilter[key]=value;save();if(key==='q'){let pos=$('#app input[placeholder="Search exercises..."]')?.selectionStart;render();let el=$('#app input[placeholder="Search exercises..."]');el?.focus();try{el?.setSelectionRange(pos,pos)}catch{}}else render()};
+window.createExercise=()=>{let name=$('#newExName').value.trim(),muscle=$('#newExMuscle').value.trim()||'Strength',equipment=$('#newExEquipment').value.trim()||'Other';if(!name)return alert('Enter an exercise name');if(catalog().some(e=>e.name.toLowerCase()===name.toLowerCase()))return alert('This exercise already exists');state.customExercises.push({name,muscle,equipment});save();render()};
+window.viewCatalogExercise=name=>{state.exerciseReturn=state.route;state.exercise=name;state.route='exercise';save();render()};
+function videoEmbed(name){let u=state.media?.[name]||'';if(!u)return `<div class="video">No video added yet</div><p class="sub">Add your own demonstration URL below (MP4 or YouTube). We don't substitute unrelated videos for technique instruction.</p>`;try{let url=new URL(u),id='';if(url.hostname==='youtu.be')id=url.pathname.slice(1);if(/(^|\.)youtube\.com$/.test(url.hostname))id=url.searchParams.get('v')||url.pathname.match(/^\/shorts\/([^/]+)/)?.[1]||'';if(id&&/^[a-zA-Z0-9_-]{11}$/.test(id))return `<iframe class="mediaframe" src="https://www.youtube-nocookie.com/embed/${id}" title="${safe(name)} demonstration" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>`;if(url.protocol==='https:'&&/\.mp4($|\?)/i.test(url.pathname))return `<video class="mediaframe" src="${safe(u)}" controls playsinline preload="metadata"></video>`;return `<p class="sub">Saved URL: <a href="${safe(u)}" target="_blank" rel="noopener noreferrer">Open demonstration</a></p>`}catch{return '<div class="sub">Invalid media URL</div>'}}
+exercisePage=function(){let name=state.exercise||'Push-Up',e=getExercise(name),steps=instructions(e);return layout(`<button class="btn ghost small" onclick="nav(${jsarg(state.exerciseReturn||'library')})">← Back</button><h1>${safe(name)}</h1><p class="sub">${safe(e.muscle)} • ${safe(e.equipment)}</p><div class="section">${videoEmbed(name)}</div><div class="card section"><h3>Exercise demonstration</h3><label>Video URL (YouTube or direct MP4)</label><input id="mediaUrl" type="url" placeholder="https://..." value="${safe(state.media?.[name]||'')}"><button class="btn secondary small section" onclick='saveExerciseMedia(${jsarg(name)})'>Save video URL</button></div><div class="section"><h2>How to perform</h2><div class="steps">${steps.map(s=>`<div class="step">${safe(s)}</div>`).join('')}</div></div><div class="grid two section"><div class="card"><h3>Technique</h3><p class="sub">Controlled movement, stable positioning and a pain-free range of motion. Adapt setup to your anatomy.</p></div><div class="card"><h3>Avoid</h3><p class="sub">Rushing repetitions, using momentum and loading beyond your control.</p></div></div><p class="sub section">Instructions are general guidance, not individualized coaching. Stop if an exercise causes pain.</p>${state.currentWorkout?`<button class="btn section" onclick='addToSession(${jsarg(name)})'>Add to current workout</button>`:''}`,'library')};
+window.saveExerciseMedia=name=>{let u=$('#mediaUrl').value.trim();if(u){try{if(new URL(u).protocol!=='https:')throw Error('HTTPS required')}catch{return alert('Enter a valid HTTPS video URL')}}state.media[name]=u;save();render()};
+function newSession(name='Quick Workout',exercises=[]){if(state.currentWorkout)return alert('Finish or cancel your current workout first.');state.currentWorkout={programId:'free',workout:name,start:Date.now(),exercises:exercises.map(e=>({...e,setData:Array.from({length:e.sets||3},()=>({weight:'',reps:'',rir:'2',done:false}))}))};state.route='train';save();render()}
+window.startEmptyWorkout=()=>{let n=prompt('Workout name','Quick Workout');if(n!==null)newSession(n.trim()||'Quick Workout')};
+window.addToSession=name=>{let c=state.currentWorkout;if(!c)return;let item=getExercise(name);c.exercises.push(ex(name,3,item.muscle==='Mobility'?'30-60 sec':'8-12',item.muscle==='Mobility'?0:75,[item.muscle]));let e=c.exercises.at(-1);e.setData=Array.from({length:3},()=>({weight:'',reps:'',rir:'2',done:false}));state.route='train';save();render()};
+window.addSetToExercise=ei=>{let e=state.currentWorkout.exercises[ei];e.setData.push({weight:'',reps:'',rir:'2',done:false});e.sets=e.setData.length;save();render()};
+window.removeSetFromExercise=ei=>{let e=state.currentWorkout.exercises[ei];if(e.setData.length<=1)return;e.setData.pop();e.sets=e.setData.length;save();render()};
+window.removeExerciseFromSession=ei=>{if(!confirm('Remove this exercise from the current workout?'))return;state.currentWorkout.exercises.splice(ei,1);save();render()};
+window.saveCurrentAsRoutine=()=>{let c=state.currentWorkout;if(!c||!c.exercises.length)return alert('Add exercises first');let n=prompt('Save routine as',c.workout);if(!n?.trim())return;state.routines.push({id:'r'+Date.now(),name:n.trim(),type:'Gym',exercises:c.exercises.map(({name,sets,reps,rest,muscles,note})=>({name,sets,reps,rest,muscles,note}))});save();alert('Routine saved to Programs')};
+train=function(){if(!state.currentWorkout)return layout(`<h1>Train your way</h1><p class="sub">Start from scratch, choose a saved routine, or use a program day.</p><button class="btn full" onclick="startEmptyWorkout()">+ Start empty workout</button><button class="btn secondary full section" onclick="nav('library')">Browse exercise library</button>${state.routines.length?`<div class="section"><h2>My routines</h2>${state.routines.map(r=>`<div class="card row"><div><h3>${safe(r.name)}</h3><div class="sub">${r.exercises.length} exercises</div></div><button class="btn small" onclick='startSavedRoutine(${jsarg(r.id)})'>Start</button></div>`).join('')}</div>`:''}<div class="section"><h2>Program workouts</h2>${activeProgram().workouts.map(w=>`<div class="card row" style="margin-bottom:10px"><div><h3>${safe(w.name)}</h3><div class="sub">${w.est} • ${w.exercises.length} exercises</div></div><button class="btn small" onclick='startWorkout(${jsarg(w.name)})'>Start</button></div>`).join('')}</div>`,'train');let c=state.currentWorkout;return layout(`<div class="row"><div><div class="sub">ACTIVE WORKOUT</div><h1>${safe(c.workout)}</h1></div><button class="btn ghost small" onclick="cancelWorkout()">Cancel</button></div><div class="row section"><button class="btn secondary small" onclick="nav('library')">+ Add exercise</button><button class="btn secondary small" onclick="saveCurrentAsRoutine()">Save as routine</button></div>${c.exercises.map((e,ei)=>`<div class="card section"><div class="row"><div><h3>${safe(e.name)}</h3><div class="sub">${safe(e.reps)} • ${e.rest||'Self-paced'}s rest</div></div><button class="btn ghost small" onclick="removeExerciseFromSession(${ei})">Remove</button></div><button class="linkbtn" onclick='viewCatalogExercise(${jsarg(e.name)})'>Technique & video →</button>${findPrevious(e.name)?`<div class="sub">Previous: ${findPrevious(e.name).map(s=>`${safe(s.weight)}kg × ${safe(s.reps)}`).join(' · ')}</div>`:''}<div class="section">${e.setData.map((s,si)=>`<div class="setrow"><span class="setnum">${si+1}</span><input aria-label="Weight in kg" inputmode="decimal" placeholder="kg" value="${safe(s.weight)}" onchange="setField(${ei},${si},'weight',this.value)"><input aria-label="Repetitions" inputmode="numeric" placeholder="reps" value="${safe(s.reps)}" onchange="setField(${ei},${si},'reps',this.value)"><input aria-label="Reps in reserve" inputmode="numeric" placeholder="RIR" value="${safe(s.rir)}" onchange="setField(${ei},${si},'rir',this.value)"><button class="check ${s.done?'done':''}" onclick="toggleSet(${ei},${si})">${s.done?'✓':'○'}</button></div>`).join('')}</div><div class="row section"><div><button class="btn ghost small" onclick="removeSetFromExercise(${ei})">− Set</button> <button class="btn secondary small" onclick="addSetToExercise(${ei})">+ Set</button></div>${e.rest?`<button class="btn ghost small" onclick="startTimer(${e.rest})">Rest ${e.rest}s</button>`:''}</div></div>`).join('')}<button class="btn secondary full section" onclick="nav('library')">+ Add another exercise</button><button class="btn full section" onclick="finishWorkout()">Finish workout</button>`,'train')};
+window.startSavedRoutine=id=>{let r=state.routines.find(r=>r.id===id);if(r)newSession(r.name,r.exercises)};
+window.createRoutine=()=>{let name=$('#routineName')?.value.trim(),type=$('#routineType')?.value||'Gym';if(!name)return alert('Name your routine');let r={id:'r'+Date.now(),name,type,exercises:[]};state.routines.push(r);state.editRoutine=r.id;state.route='routine';save();render()};
+window.editRoutine=id=>{state.editRoutine=id;state.route='routine';save();render()};
+window.addRoutineExercise=()=>{let r=state.routines.find(x=>x.id===state.editRoutine);let name=$('#routineExercise').value;if(!r||!name)return;r.exercises.push(ex(name,3,'8-12',75,[getExercise(name).muscle]));save();render()};
+window.removeRoutineExercise=i=>{let r=state.routines.find(x=>x.id===state.editRoutine);r.exercises.splice(i,1);save();render()};
+window.updateRoutineExercise=(i,key,value)=>{let r=state.routines.find(x=>x.id===state.editRoutine);r.exercises[i][key]=key==='sets'||key==='rest'?Number(value):value;save()};
+window.deleteRoutine=id=>{if(!confirm('Delete this saved routine?'))return;state.routines=state.routines.filter(x=>x.id!==id);save();render()};
+function routineEditor(){let r=state.routines.find(x=>x.id===state.editRoutine);if(!r)return programs();return layout(`<button class="btn ghost small" onclick="nav('programs')">← Programs</button><h1>${safe(r.name)}</h1><p class="sub">Edit the exercise list and targets. Changes are saved automatically.</p>${r.exercises.map((e,i)=>`<div class="card section"><div class="row"><h3>${safe(e.name)}</h3><button class="btn ghost small" onclick="removeRoutineExercise(${i})">Remove</button></div><div class="grid three"><div><label>Sets</label><input type="number" min="1" max="15" value="${e.sets}" onchange="updateRoutineExercise(${i},'sets',this.value)"></div><div><label>Reps / time</label><input value="${safe(e.reps)}" onchange="updateRoutineExercise(${i},'reps',this.value)"></div><div><label>Rest (sec)</label><input type="number" min="0" value="${e.rest}" onchange="updateRoutineExercise(${i},'rest',this.value)"></div></div></div>`).join('')}<div class="card section"><h3>Add exercise</h3><select id="routineExercise">${catalog().map(e=>`<option value="${safe(e.name)}">${safe(e.name)} · ${safe(e.muscle)}</option>`).join('')}</select><button class="btn section" onclick="addRoutineExercise()">+ Add to routine</button></div><button class="btn full section" onclick='startSavedRoutine(${jsarg(r.id)})'>Start this routine</button>`,'programs')}
+programs=function(){return layout(`<h1>Programs & routines</h1><p class="sub">Create your own workouts. Preset phases are optional.</p><div class="card"><h2>Create a routine</h2><label>Name</label><input id="routineName" placeholder="e.g. Saturday full body"><label>Type</label><select id="routineType"><option>Gym</option><option>Home</option><option>Mobility</option><option>Cardio</option><option>Core</option></select><button class="btn section" onclick="createRoutine()">Create & edit</button></div><div class="section"><h2>My routines</h2>${state.routines.length?state.routines.map(r=>`<div class="card row" style="margin-bottom:8px"><div><h3>${safe(r.name)}</h3><div class="sub">${safe(r.type)} • ${r.exercises.length} exercises</div></div><div class="row" style="gap:5px"><button class="btn secondary small" onclick='editRoutine(${jsarg(r.id)})'>Edit</button><button class="btn small" onclick='startSavedRoutine(${jsarg(r.id)})'>Start</button></div></div>`).join(''):'<p class="sub">No saved routines yet.</p>'}</div><div class="section"><h2>Preset training phases</h2>${state.programs.map(p=>`<div class="card section"><div class="row"><div><h3>${safe(p.name)}</h3><div class="sub">${p.workouts.length} training days • ${p.length} weeks</div></div><button class="btn ${p.id===state.activeProgram?'ghost':'secondary'} small" onclick='activateProgram(${jsarg(p.id)})'>${p.id===state.activeProgram?'Active':'Use'}</button></div></div>`).join('')}</div><div class="section"><h2>Mobility routines</h2>${stretches.map(r=>`<div class="card row section"><div><h3>${safe(r.name)}</h3><div class="sub">${r.items.length} movements</div></div><button class="btn secondary small" onclick='openStretch(${jsarg(r.name)})'>Open</button></div>`).join('')}</div><div class="section"><h2>Home workouts</h2>${homeWorkouts.map(w=>`<div class="card row section"><div><h3>${safe(w.name)}</h3><div class="sub">${safe(w.equipment)} • ${w.ex.length} exercises</div></div><button class="btn secondary small" onclick='startHomeWorkout(${jsarg(w.name)})'>Start</button></div>`).join('')}</div>`,'programs')};
+window.startHomeWorkout=name=>{let w=homeWorkouts.find(x=>x.name===name);if(w)newSession(w.name,w.ex.map(n=>ex(n,3,'8-15',60,[getExercise(n).muscle])))};
+window.addGoal=()=>{let title=$('#goalTitle').value.trim(),kind=$('#goalKind').value,target=Number($('#goalTarget').value),unit=$('#goalUnit').value.trim(),date=$('#goalDate').value;if(!title||!Number.isFinite(target)||target<=0)return alert('Enter a goal name and positive target');state.goals.push({id:'g'+Date.now(),title,kind,target,unit,date,entries:[],createdAt:new Date().toISOString()});save();render()};
+window.logGoal=id=>{let g=state.goals.find(x=>x.id===id),v=prompt('Current value'+(g.unit?' ('+g.unit+')':''));if(v===null)return;let value=Number(v);if(!Number.isFinite(value))return alert('Enter a number');g.entries.push({value,date:new Date().toISOString()});save();render()};
+window.deleteGoal=id=>{if(!confirm('Delete this goal?'))return;state.goals=state.goals.filter(x=>x.id!==id);save();render()};
+function goals(){return layout(`<h1>My goals</h1><button class="btn ghost small" onclick="nav('settings')">Profile & backups →</button><p class="sub">Create goals that matter to you: strength, bodyweight, consistency, distance or anything measurable.</p><div class="card"><h2>New goal</h2><label>Goal name</label><input id="goalTitle" placeholder="e.g. Bench press 100 kg"><label>Category</label><select id="goalKind"><option>Strength</option><option>Bodyweight</option><option>Consistency</option><option>Cardio</option><option>Mobility</option><option>Other</option></select><div class="grid two"><div><label>Target number</label><input id="goalTarget" inputmode="decimal" type="number" step="any" placeholder="100"></div><div><label>Unit</label><input id="goalUnit" placeholder="kg, workouts, km..."></div></div><label>Target date (optional)</label><input id="goalDate" type="date"><button class="btn section" onclick="addGoal()">Create goal</button></div><div class="section"><h2>Active goals</h2>${state.goals.length?state.goals.map(g=>{let last=g.entries.at(-1)?.value;return `<div class="card section"><div class="row"><div><h3>${safe(g.title)}</h3><div class="sub">${safe(g.kind)} • Target ${g.target} ${safe(g.unit)}${g.date?' by '+safe(g.date):''}</div></div><button class="btn ghost small" onclick='deleteGoal(${jsarg(g.id)})'>Delete</button></div><div class="metric small section">${last===undefined?'Not logged':last+' '+safe(g.unit)}</div><div class="sub">${g.entries.length} check-ins</div><button class="btn secondary small section" onclick='logGoal(${jsarg(g.id)})'>Log progress</button></div>`}).join(''):'<div class="card sub">Create your first personal goal above.</div>'}</div>`,'goals')}
+const oldSettings=settings;settings=function(){let original=oldSettings();return original.replace('<h1>Your goals</h1>','<h1>Your profile</h1><button class="btn secondary full" onclick="nav(\'goals\')">Manage personal goals →</button>')};
+const oldToday=today;today=function(){let html=oldToday();return html.replace('<div class="section"><h2>Today</h2>','<div class="section grid two"><button class="btn" onclick="startEmptyWorkout()">+ Quick workout</button><button class="btn secondary" onclick="nav(\'library\')">Explore exercises</button><button class="btn secondary" onclick="nav(\'goals\')">My goals</button><button class="btn secondary" onclick="nav(\'programs\')">My routines</button></div><div class="section"><h2>Today</h2>')};
+const oldLayout=layout;layout=function(content,active='today'){let html=oldLayout(content,active);html=html.replace('<div class="brand">FORGE</div>','<div class="brand">FORGE <span class="version">V4</span></div>');html=html.replace('<button class="btn ghost small" onclick="nav(\'settings\')">Goals</button>','<button class="btn ghost small" onclick="nav(\'goals\')">My goals</button>');html=html.replace("[['today','Today'],['train','Train'],['programs','Programs'],['progress','Progress'],['settings','You']]","[['today','Home'],['train','Train'],['library','Explore'],['programs','Routines'],['progress','Progress']]");return html};
+render=function(){let app=$('#app');if(!state.onboarded){app.innerHTML=onboarding();return}let routes={today,train,library,programs,routine:routineEditor,goals,progress,settings,exercise:exercisePage,stretch:stretchPage};app.innerHTML=(routes[state.route]||today)()};
+
+render();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#081018" />
+  <title>FORGE — Your Training, Your Rules</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app"></div>
+  <script src="app.js"></script>
+</body>
+</html>
+
+{
+  "name": "FORGE \u2014 Adaptive Training Coach",
+  "short_name": "FORGE",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#081018",
+  "theme_color": "#081018",
+  "description": "Adaptive strength, physique, mobility and home training coach."
+}
